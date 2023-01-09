@@ -58,7 +58,6 @@ class Generator(nn.Module):
 
         for b in self.blocks:
             z=nn.functional.interpolate(z.reshape((z.shape[1],1,z.shape[0])),scale_factor=2,mode='linear')
-            print(z.shape)
             z=b(z.reshape((z.shape[2],z.shape[0],1)))
         
         z=z.reshape((z.shape[1],z.shape[0],1))
