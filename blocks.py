@@ -5,6 +5,17 @@ from torch import optim
 import torch.nn.functional as F
 
 
+
+class pool(nn.Module):
+    def __init__(self, in_dim):
+        super().__init__()
+        self.pool=nn.AvgPool1d(kernel_size=2)
+    def forward(self,x):
+        z=self.pool(x)
+        return z
+
+
+
 class Self_Attn(nn.Module):
    
     def __init__(self, in_dim):
