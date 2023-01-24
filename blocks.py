@@ -71,14 +71,18 @@ class MainBlock(nn.Module):
 
 class Generator(nn.Module):            
 
-    def __init__(self,batch_size, embedding_dim, tau):
+    def __init__(self,embedding_dim, tau):
         super().__init__()
+
         self.main=MainBlock(embedding_dim+2)
         self.blocks = nn.ModuleList([
            MainBlock(embedding_dim+2)
         ])
+
+        #bookkeping of the number of blocks
         self.n=self.blocks.__len__()
-        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+2, out_channels=1,kernel_size=1))
+
+        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+2+self.n, out_channels=1,kernel_size=1))
         self.embedding_dim=embedding_dim
         self.pool=pool(tau)
         
@@ -109,6 +113,7 @@ class Generator(nn.Module):
         for b in self.blocks:
             z=nn.functional.interpolate((z),scale_factor=2,mode='linear')
             z=b(z)
+            z=torch.cat((z,Xt),dim=1)  #concatenated back to the time features X t:t+τ −1 and forwarded to the next block.
 
         ###########################################################
         
