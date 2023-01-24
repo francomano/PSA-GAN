@@ -82,37 +82,29 @@ class Generator(nn.Module):
         self.embedding_dim=embedding_dim
         self.pool=pool(tau)
         
-    def _get_noise(time_features):
-        time_features = time_features.permute(0, 2, 1)
-        bs = time_features.size(0)
-        target_len = time_features.size(2)
-        noise = torch.randn((bs, 1, target_len))
-        noise = torch.cat((time_features, noise), dim=1)
-        return noise
+    
 
     def forward(self,phi, X):
         
+        #add gaussian noise:
         Xt = X.permute(0, 2, 1)
         bs = Xt.size(0)
         target_len = Xt.size(2)
         noise = torch.randn((bs, 1, target_len))
         noise = torch.cat((Xt, noise), dim=1)
-        print(noise.shape)
-
-        phi=phi.permute(0, 2, 1).expand(Xt.size(0), self.embedding_dim, Xt.size(2))
-        print(phi.shape)
         
+        #concatenate with the embedding
+        phi=phi.permute(0, 2, 1).expand(Xt.size(0), self.embedding_dim, Xt.size(2))
         x = torch.cat((phi, noise), dim=1)
 
-     
+        #latent space of length 8
         print("x.shape:",x.shape)
         z=self.pool(x)
         print("z.shape:",z.shape)
 
-        ################## Main blocks(2,L) #############################
+        z=self.main(z)  #first block(g1)
 
-        z=self.main(z)
-        print("now the shape is:",z.shape)
+        ################## Main blocks(g2,gL) #############################
 
         for b in self.blocks:
             z=nn.functional.interpolate((z),scale_factor=2,mode='linear')
