@@ -13,9 +13,9 @@ These instructions will get you a copy of the project on your local machine for 
 What things you need to install the software and how to install them. For example: 
 * [Python 3](https://www.python.org/downloads/) 
 * [Git](https://git-scm.com/downloads)
-* [PyTorch]
-* [Numpy]
-* [Matplotlib] 
+* [PyTorch](https://pytorch.org/)
+* [Numpy](https://numpy.org/)
+* [Matplotlib](https://matplotlib.org/) 
 
 
 ### Installation
