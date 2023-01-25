@@ -31,12 +31,12 @@ Step by step series of examples that tell you how to get a development env runni
 
  ## Authors  
 
- * **francomano** - [francomano](https://github.com/francomano)  
- * **DavideEspositoPelella** -  [DavideEspositoPelella](https://github.com/DavideEspositoPelella)  
+ * **Bonifacio Marco Francomano** - [francomano](https://github.com/francomano)  
+ * **Davide Esposito Pelella** -  [DavideEspositoPelella](https://github.com/DavideEspositoPelella)  
 
 
 ## Cite
 
-* **mbohlkeschneider** - [mbohlkeschneider](https://github.com/mbohlkeschneider/psa-gan)
+* **Michael Bohlke-Schneider** - [mbohlkeschneider](https://github.com/mbohlkeschneider/psa-gan)
 
 
