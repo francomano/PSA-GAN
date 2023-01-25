@@ -71,18 +71,18 @@ class MainBlock(nn.Module):
 
 class Generator(nn.Module):            
 
-    def __init__(self,embedding_dim, tau):
+    def __init__(self,embedding_dim, tau,num_features):
         super().__init__()
 
         self.main=MainBlock(embedding_dim+2)
         self.blocks = nn.ModuleList([
-           MainBlock(embedding_dim+2)
+           MainBlock(embedding_dim+1+num_features)
         ])
 
         #bookkeping of the number of blocks
         self.n=self.blocks.__len__()
 
-        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+2+self.n, out_channels=1,kernel_size=1))
+        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+1+num_features+self.n, out_channels=1,kernel_size=1))
         self.embedding_dim=embedding_dim
         self.pool=pool(tau)
         
