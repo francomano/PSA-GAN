@@ -11,3 +11,14 @@ def sliding_windows(data, seq_length):
         y.append(_y)
 
     return np.array(x),np.array(y)
+
+
+def real_seq(datay,seq_length):
+    datay=datay.detach().numpy()
+    y=[]
+    for i in range(seq_length,len(datay)-seq_length-1):
+        _y = datay[i:(i+seq_length)]
+        y.append(_y)
+
+
+    return np.array(y)
