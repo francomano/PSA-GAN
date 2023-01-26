@@ -75,7 +75,9 @@ class Generator(nn.Module):
 
 
         self.blocks = nn.ModuleList([
-           MainBlock(32+num_features,32,value_features,key_features)
+           MainBlock(32+num_features,32,value_features,key_features),
+           MainBlock(32+num_features,32,value_features,key_features),
+
         ])
 
         #bookkeping of the number of blocks
