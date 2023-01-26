@@ -22,3 +22,9 @@ def real_seq(datay,seq_length):
 
 
     return np.array(y)
+def noise(Xt):
+    bs = Xt.size(0)
+    target_len = Xt.size(2)
+    noise = torch.randn((bs, 1, target_len))
+    Xt = torch.cat((Xt, noise), dim=1)
+    return Xt

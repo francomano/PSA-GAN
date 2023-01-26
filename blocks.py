@@ -4,6 +4,7 @@ import math
 import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
+import utils
 
 
 class pool(nn.Module):
@@ -100,12 +101,7 @@ class Generator(nn.Module):
         Xt = X.permute(0, 2, 1)
 
         #add gaussian noise:
-        bs = Xt.size(0)
-        target_len = Xt.size(2)
-        noise = torch.randn((bs, 1, target_len))
-        Xt = torch.cat((Xt, noise), dim=1)
-        
-
+        Xt=utils.noise(Xt)
         
         #concatenate with the embedding
         phi=self.embedding(torch.tensor(np.array(range(self.batch_size))))
@@ -118,9 +114,8 @@ class Generator(nn.Module):
         #latent space of length 8
         z=self.pool(x)
 
-        
-
-        z=self.main(z)  #first block(g1)
+        #first block(g1)
+        z=self.main(z)  
 
         ################## Main blocks(g2,gL) #############################
 
@@ -142,7 +137,57 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
 
-    def __init__():
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features):
         super().__init__()
-    def forward(self, z):
-        return z
+
+        self.fake_len=fake_len
+        self.step=(int)(math.log2(fake_len))-2   #number of blocks we used to reach fake_len
+        self.embedding_dim=embedding_dim
+        self.batch_size=batch_size
+
+        first_module=[]
+        first_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = num_features, out_channels=32,kernel_size=1)))
+        first_module.append(nn.LeakyReLU())
+        self.first_module = nn.Sequential(*first_module)
+
+        self.blocks = nn.ModuleList([])
+        while(self.step-1): #1 is the first main block
+            self.blocks.appen(MainBlock(32,32,value_features,key_features))
+            self.step-=1
+
+        last_module=[]
+        last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = num_features, out_channels=32,kernel_size=1)))
+        last_module.append(nn.LeakyReLU())
+        self.last_module = nn.Sequential(*last_module)
+
+        self.fc = nn.utils.spectral_norm(nn.Linear(8, 1))
+
+
+
+
+    def forward(self,Z,X):    #Z is the output of the generator (batch,1,fake_len), X the time-features matrix
+
+        #compute how many blocks we should use to arrive at the original length from 8(latent space)
+        reduce_factor = int(math.log2(self.fake_len)) - int(math.log2(X.size(2)))
+
+        #embedding
+        phi=self.embedding(torch.tensor(np.array(range(self.batch_size))))
+        phi=phi.unsqueeze(1)
+        phi=phi.permute(0, 2, 1)
+        phi=phi.expand(X.size(0), self.embedding_dim, X.size(2))
+
+        reduced_X = F.avg_pool1d(X, kernel_size=2 ** reduce_factor) #in order to concatenate with Z
+        x = torch.cat((reduced_X, Z), dim=1)
+
+        #D->32 channels
+        x = self.first_module(x)
+
+        for l in enumerate(self.block_list):
+            x = l(x)
+            x = F.avg_pool1d(x, kernel_size=2)
+            
+
+        x = self.last_module(x)
+        x = self.fc(x.squeeze(1))
+        
+        return x
