@@ -4,7 +4,6 @@ import math
 import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
-import get_batch
 
 
 class pool(nn.Module):
@@ -70,39 +69,26 @@ class MainBlock(nn.Module):
 
 
 
-
-
 class Generator(nn.Module):            
 
     def __init__(self,embedding_dim, tau,num_features):
         super().__init__()
 
         self.main=MainBlock(embedding_dim+2)
-        self.blocks = nn.ModuleList([MainBlock(embedding_dim+1+num_features)])
-        self.num_features=num_features
+        self.blocks = nn.ModuleList([
+           MainBlock(embedding_dim+1+num_features)
+        ])
 
         #bookkeping of the number of blocks
-        self.n=1
+        self.n=self.blocks.__len__()
 
-        self.tau=tau
-
-        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+1+num_features+self.n*num_features, out_channels=1,kernel_size=1))
+        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+1+num_features+self.n, out_channels=1,kernel_size=1))
         self.embedding_dim=embedding_dim
         self.pool=pool(tau)
         
-    def addBlock(self):
-        self.blocks.append(MainBlock(self.embedding_dim+len(self.blocks)+2))
-        self.n+=1
-        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =self.embedding_dim+1+self.num_features+self.n*self.num_features, out_channels=1,kernel_size=1))
-        
+    
 
-    def forward(self,data,batch,epoch):
-
-        #create the time series matrix and the embedded vector
-        X=torch.Tensor(get_batch.get_batch(data,self.tau,batch,epoch))
-        embedding = nn.Embedding(X.size(0), self.embedding_dim)
-        phi = embedding(torch.tensor(np.array(range(X.size(0)))))
-        phi=phi[:,None,:]
+    def forward(self,phi, X):
         
         #add gaussian noise:
         Xt = X.permute(0, 2, 1)
@@ -116,18 +102,18 @@ class Generator(nn.Module):
         x = torch.cat((phi, noise), dim=1)
 
         #latent space of length 8
+        print("x.shape:",x.shape)
         z=self.pool(x)
-   
+        print("z.shape:",z.shape)
 
         z=self.main(z)  #first block(g1)
 
         ################## Main blocks(g2,gL) #############################
 
-        for b in range(0,len(self.blocks)):
+        for b in self.blocks:
             z=nn.functional.interpolate((z),scale_factor=2,mode='linear')
-            z=self.blocks[b](z)
-            tf=torch.Tensor(get_batch.get_batch(data,2**(3+b+1),batch,epoch)).permute(0, 2, 1) #the X to concatenate
-            z=torch.cat((z,tf),dim=1)  #concatenated back to the time features X t:t+τ −1 and forwarded to the next block.
+            z=b(z)
+            z=torch.cat((z,Xt),dim=1)  #concatenated back to the time features X t:t+τ −1 and forwarded to the next block.
 
         ###########################################################
         
@@ -141,7 +127,7 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
 
-    def __init__(self):
+    def __init__():
         super().__init__()
     def forward(self, z):
         return z
