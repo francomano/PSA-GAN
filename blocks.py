@@ -84,6 +84,7 @@ class Generator(nn.Module):
         #bookkeping of the number of blocks
         self.n=1
 
+        self.tau=tau
 
         self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =embedding_dim+1+num_features+self.n*num_features, out_channels=1,kernel_size=1))
         self.embedding_dim=embedding_dim
@@ -95,10 +96,10 @@ class Generator(nn.Module):
         self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =self.embedding_dim+1+self.num_features+self.n*self.num_features, out_channels=1,kernel_size=1))
         
 
-    def forward(self,data,seq_length,batch,epoch):
+    def forward(self,data,batch,epoch):
 
         #create the time series matrix and the embedded vector
-        X=torch.Tensor(get_batch.get_batch(data,seq_length,batch,epoch))
+        X=torch.Tensor(get_batch.get_batch(data,self.tau,batch,epoch))
         embedding = nn.Embedding(X.size(0), self.embedding_dim)
         phi = embedding(torch.tensor(np.array(range(X.size(0)))))
         phi=phi[:,None,:]
