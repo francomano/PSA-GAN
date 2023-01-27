@@ -3,7 +3,7 @@ import torch
 import os
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
-
+from sklearn.preprocessing import MinMaxScaler
 
 def sliding_windows(data, seq_length):
     x = []
@@ -60,3 +60,8 @@ def plot_training_history(name, discriminator_loss, generator_loss):
   print("End-training Generator Loss:",generator_loss[-1])
   print("End-training Discriminator Loss:",discriminator_loss[-1])
   return
+
+def scale(generated):
+    sc = MinMaxScaler()
+    generated = sc.fit_transform(generated)
+    return generated
