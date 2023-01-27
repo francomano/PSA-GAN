@@ -1,0 +1,4 @@
+generator_lr=0.0001
+num_epochs=200
+batch_size=11
+seq_len=8

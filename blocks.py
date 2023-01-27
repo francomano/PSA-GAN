@@ -74,19 +74,19 @@ class Generator(nn.Module):
 
         self.main=MainBlock(1+num_features,32,value_features,key_features)
 
-
-        self.blocks = nn.ModuleList([
-           MainBlock(32+num_features,32,value_features,key_features),
-           MainBlock(32+num_features,32,value_features,key_features),
-        ])
-
-        #bookkeping of the number of blocks
-        self.n=1
-
         self.fake_len=fake_len  #the len we want to reach
         self.step=(int)(math.log2(self.fake_len))-2
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
+
+
+        self.blocks = nn.ModuleList([])
+        for i in range(self.step-1):
+            self.blocks.append(MainBlock(32+num_features,32,value_features,key_features))
+
+        
+
+        
 
         self.embedding=nn.Embedding(batch_size,embedding_dim)
         self.pool=pool(self.fake_len,self.step)
@@ -151,13 +151,16 @@ class Discriminator(nn.Module):
         self.first_module = nn.Sequential(*first_module)
 
         self.blocks = nn.ModuleList([])
-        while(self.step-1): #1 is the first main block
+        n=self.step
+        while(n-1): #1 is the first main block
             self.blocks.append(MainBlock(32,32,value_features,key_features))
-            self.step-=1
+            n-=1
 
         last_module=[]
-        last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=32,kernel_size=1)))
+        last_module.append(MainBlock(32,32,value_features,key_features))
+        last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1)))
         last_module.append(nn.LeakyReLU())
+
         self.last_module = nn.Sequential(*last_module)
 
         self.fc = nn.utils.spectral_norm(nn.Linear(8, 1))
@@ -183,18 +186,17 @@ class Discriminator(nn.Module):
 
         #D->32 channels
         x = self.first_module(x)
-        print(x.shape)
+        
 
-        for l in enumerate(self.blocks):
+        for l in self.blocks:
             x = l(x)
             x = F.avg_pool1d(x, kernel_size=2)
-            print(x.shape)
+            
             
 
         x = self.last_module(x)
-        print(x.shape)
+        
         x=x.squeeze(dim=1)
-        print(x.shape)
         x = self.fc(x)
         
         return x
