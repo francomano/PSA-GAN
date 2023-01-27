@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 def sliding_windows(data, seq_length):
     x = []

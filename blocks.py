@@ -69,7 +69,7 @@ class MainBlock(nn.Module):
 
 class Generator(nn.Module):            
 
-    def __init__(self,embedding_dim, tau,num_features,batch_size,value_features,key_features):
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features):
         super().__init__()
 
         self.main=MainBlock(1+num_features,32,value_features,key_features)
@@ -78,19 +78,18 @@ class Generator(nn.Module):
         self.blocks = nn.ModuleList([
            MainBlock(32+num_features,32,value_features,key_features),
            MainBlock(32+num_features,32,value_features,key_features),
-
         ])
 
         #bookkeping of the number of blocks
         self.n=1
 
-        self.tau=tau
-        self.step=(int)(math.log2(tau))-2
+        self.fake_len=fake_len  #the len we want to reach
+        self.step=(int)(math.log2(self.fake_len))-2
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
 
         self.embedding=nn.Embedding(batch_size,embedding_dim)
-        self.pool=pool(tau,self.step)
+        self.pool=pool(self.fake_len,self.step)
         self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1))
         
         
@@ -145,18 +144,19 @@ class Discriminator(nn.Module):
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
 
+        self.embedding=nn.Embedding(batch_size,embedding_dim)
         first_module=[]
-        first_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = num_features, out_channels=32,kernel_size=1)))
+        first_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = num_features+1, out_channels=32,kernel_size=1)))
         first_module.append(nn.LeakyReLU())
         self.first_module = nn.Sequential(*first_module)
 
         self.blocks = nn.ModuleList([])
         while(self.step-1): #1 is the first main block
-            self.blocks.appen(MainBlock(32,32,value_features,key_features))
+            self.blocks.append(MainBlock(32,32,value_features,key_features))
             self.step-=1
 
         last_module=[]
-        last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = num_features, out_channels=32,kernel_size=1)))
+        last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=32,kernel_size=1)))
         last_module.append(nn.LeakyReLU())
         self.last_module = nn.Sequential(*last_module)
 
@@ -168,26 +168,33 @@ class Discriminator(nn.Module):
     def forward(self,Z,X):    #Z is the output of the generator (batch,1,fake_len), X the time-features matrix
 
         #compute how many blocks we should use to arrive at the original length from 8(latent space)
-        reduce_factor = int(math.log2(self.fake_len)) - int(math.log2(X.size(2)))
+        reduce_factor = int(math.log2(self.fake_len)) - int(math.log2(Z.size(2)))
+        X=X.permute(0,2,1)
 
         #embedding
         phi=self.embedding(torch.tensor(np.array(range(self.batch_size))))
         phi=phi.unsqueeze(1)
         phi=phi.permute(0, 2, 1)
         phi=phi.expand(X.size(0), self.embedding_dim, X.size(2))
+        X = torch.cat((phi, X), dim=1)
 
         reduced_X = F.avg_pool1d(X, kernel_size=2 ** reduce_factor) #in order to concatenate with Z
         x = torch.cat((reduced_X, Z), dim=1)
 
         #D->32 channels
         x = self.first_module(x)
+        print(x.shape)
 
-        for l in enumerate(self.block_list):
+        for l in enumerate(self.blocks):
             x = l(x)
             x = F.avg_pool1d(x, kernel_size=2)
+            print(x.shape)
             
 
         x = self.last_module(x)
-        x = self.fc(x.squeeze(1))
+        print(x.shape)
+        x=x.squeeze(dim=1)
+        print(x.shape)
+        x = self.fc(x)
         
         return x
