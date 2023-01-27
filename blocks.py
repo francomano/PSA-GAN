@@ -46,7 +46,7 @@ class Self_Attn(nn.Module):
         # Add attention weights onto input
         out = self.gamma*out + x
         
-        return x
+        return out
 
 
 class MainBlock(nn.Module):
