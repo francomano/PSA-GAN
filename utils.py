@@ -14,15 +14,15 @@ def sliding_windows(data, seq_length):
     return np.array(x),np.array(y)
 
 
-def real_seq(datay,seq_length):
-    datay=datay.detach().numpy()
+def real_seq(data,seq_length):
+
     y=[]
-    for i in range(seq_length,len(datay)-seq_length-1):
-        _y = datay[i:(i+seq_length)]
+    for i in range(seq_length,len(data)-seq_length-1):
+        _y = data[i:(i+seq_length)]
         y.append(_y)
-
-
     return np.array(y)
+
+    
 def noise(Xt):
     bs = Xt.size(0)
     target_len = Xt.size(2)
