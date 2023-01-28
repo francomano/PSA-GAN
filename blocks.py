@@ -199,5 +199,4 @@ class Discriminator(nn.Module):
         x=x.squeeze(dim=1)
         x = self.fc(x)
         
-        #print("Sono un outputttttt D.shape:",x.shape, x.type, x)
         return x
