@@ -27,10 +27,12 @@ def real_seq(data,seq_length):
     return np.array(y)
 
     
-def noise(Xt):
+def noise(Xt, device):
     bs = Xt.size(0)
     target_len = Xt.size(2)
     noise = torch.randn((bs, 1, target_len))
+    noise=noise.to(device)
+    Xt=Xt.to(device)
     Xt = torch.cat((Xt, noise), dim=1)
     return Xt
 
@@ -66,4 +68,15 @@ def scale(generated):
     sc = MinMaxScaler()
     generated = sc.fit_transform(generated)
     return generated
+
+
+def assign_device(gpu):
+    if (torch.cuda.is_available() and gpu==True):
+        device = "cuda"
+        print("Cuda enabled using GPU")
+    else:
+        device = "cpu"
+        print("Cuda not available, using CPU")
+    return device
+
 

@@ -69,7 +69,7 @@ class MainBlock(nn.Module):
 
 class Generator(nn.Module):            
 
-    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features):
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,device):
         super().__init__()
 
         self.main=MainBlock(1+num_features,32,value_features,key_features)
@@ -78,8 +78,9 @@ class Generator(nn.Module):
         self.step=(int)(math.log2(self.fake_len))-2
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
+        self.device=device
         self.softmax = nn.Softmax(dim=1)
-
+        
         self.blocks = nn.ModuleList([])
         for i in range(self.step-1):
             self.blocks.append(MainBlock(32+num_features,32,value_features,key_features))
@@ -103,16 +104,17 @@ class Generator(nn.Module):
     def forward(self, X):
         
         Xt = X.permute(0, 2, 1)
-
-        #add gaussian noise:
-        Xt=utils.noise(Xt)
         
+        #add gaussian noise:
+        #Xt=Xt.to(self.device)
+        Xt=utils.noise(Xt, self.device)
+
         #concatenate with the embedding
-        phi=self.embedding(torch.tensor(np.array(range(self.batch_size))))
+        phi=self.embedding(torch.tensor(np.array(range(self.batch_size))).to(self.device))
         phi=phi.unsqueeze(1)
         phi=phi.permute(0, 2, 1)
         phi=phi.expand(Xt.size(0), self.embedding_dim, Xt.size(2))
-        
+        phi=phi.to(self.device)
         x = torch.cat((phi, Xt), dim=1)
 
         #latent space of length 8
@@ -151,13 +153,14 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
 
-    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features):
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,device):
         super().__init__()
 
         self.fake_len=fake_len
         self.step=(int)(math.log2(fake_len))-2   #number of blocks we used to reach fake_len
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
+        self.device=device
 
         self.embedding=nn.Embedding(batch_size,embedding_dim)
         first_module=[]
@@ -190,7 +193,7 @@ class Discriminator(nn.Module):
         X=X.permute(0,2,1)
 
         #embedding
-        phi=self.embedding(torch.tensor(np.array(range(self.batch_size))))
+        phi=self.embedding(torch.tensor(np.array(range(self.batch_size))).to(self.device))
         phi=phi.unsqueeze(1)
         phi=phi.permute(0, 2, 1)
         phi=phi.expand(X.size(0), self.embedding_dim, X.size(2))
