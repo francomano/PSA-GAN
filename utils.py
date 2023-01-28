@@ -66,3 +66,4 @@ def scale(generated):
     sc = MinMaxScaler()
     generated = sc.fit_transform(generated)
     return generated
+
