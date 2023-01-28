@@ -134,11 +134,13 @@ class Generator(nn.Module):
         
         z=self.outlayer(z).squeeze(1)
 
-        scale=True
+        scale=False
+        
         if (scale==True):
             z=self.softmax_min_max_localscaling(z)
         #z=self.softmax_min_max_localscaling(z)
 
+        
         z=z.unsqueeze(dim=1)
         
         
