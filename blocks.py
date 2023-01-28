@@ -78,12 +78,12 @@ class Generator(nn.Module):
         self.step=(int)(math.log2(self.fake_len))-2
         self.embedding_dim=embedding_dim
         self.batch_size=batch_size
-
+        self.softmax = nn.Softmax(dim=1)
 
         self.blocks = nn.ModuleList([])
         for i in range(self.step-1):
             self.blocks.append(MainBlock(32+num_features,32,value_features,key_features))
-
+        
         
 
         
@@ -92,7 +92,12 @@ class Generator(nn.Module):
         self.pool=pool(self.fake_len,self.step)
         self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1))
         
-        
+
+    def softmax_min_max_localscaling(self, target, alpha=100):
+        min = torch.sum(target * self.softmax(-alpha * target), dim=1, keepdim=True)
+        max = torch.sum(target * self.softmax(alpha * target), dim=1, keepdim=True)
+
+        return (target - min) / (max - min)    
     
 
     def forward(self, X):
@@ -128,8 +133,16 @@ class Generator(nn.Module):
         ###########################################################
         
         z=self.outlayer(z).squeeze(1)
+
+        scale=True
+        if (scale==True):
+            z=self.softmax_min_max_localscaling(z)
+        #z=self.softmax_min_max_localscaling(z)
+
         z=z.unsqueeze(dim=1)
         
+        
+
         return z
 
 

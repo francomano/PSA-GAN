@@ -61,6 +61,7 @@ def plot_training_history(name, discriminator_loss, generator_loss):
   print("End-training Discriminator Loss:",discriminator_loss[-1])
   return
 
+
 def scale(generated):
     sc = MinMaxScaler()
     generated = sc.fit_transform(generated)
