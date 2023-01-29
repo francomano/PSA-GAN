@@ -73,10 +73,10 @@ def scale(generated):
 def assign_device(gpu):
     if (torch.cuda.is_available() and gpu==True):
         device = "cuda"
-        print("Cuda enabled using GPU")
+        print("Cuda enabled: using GPU")
     else:
         device = "cpu"
-        print("Cuda not available, using CPU")
+        print("Cuda not available: using CPU")
     return device
 
 

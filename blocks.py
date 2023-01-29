@@ -106,7 +106,6 @@ class Generator(nn.Module):
         Xt = X.permute(0, 2, 1)
         
         #add gaussian noise:
-        #Xt=Xt.to(self.device)
         Xt=utils.noise(Xt, self.device)
 
         #concatenate with the embedding
@@ -114,7 +113,6 @@ class Generator(nn.Module):
         phi=phi.unsqueeze(1)
         phi=phi.permute(0, 2, 1)
         phi=phi.expand(Xt.size(0), self.embedding_dim, Xt.size(2))
-        phi=phi.to(self.device)
         x = torch.cat((phi, Xt), dim=1)
 
         #latent space of length 8
@@ -140,7 +138,6 @@ class Generator(nn.Module):
         
         if (scale==True):
             z=self.softmax_min_max_localscaling(z)
-        #z=self.softmax_min_max_localscaling(z)
 
         
         z=z.unsqueeze(dim=1)
