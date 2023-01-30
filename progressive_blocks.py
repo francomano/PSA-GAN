@@ -218,7 +218,6 @@ class Discriminator(nn.Module):
         #D->32 channels
         x = self.first_module(x)
         
-        
         for i,l in enumerate(self.blocks[active:]):
             if(i==0):
                 x=fade*l(x)+(1-fade)*l(x)
