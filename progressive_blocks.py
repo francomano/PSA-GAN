@@ -200,8 +200,6 @@ class Discriminator(nn.Module):
 
     def forward(self,Z,X,fade,active):    #Z is the output of the generator (batch,1,fake_len), X the time-features matrix
 
-        #compute how much we have to reduce the X in order to concatenate it with Z
-        #PROBLEM WITH REAL SEQUENCES LENGTH (512)
         reduce_factor = int(math.log2(self.fake_len)) - int(math.log2(Z.size(2)))
         X=X.permute(0,2,1)
 
@@ -220,7 +218,7 @@ class Discriminator(nn.Module):
         #D->32 channels
         x = self.first_module(x)
         
-        print(x.shape)
+        
         for i,l in enumerate(self.blocks[active:]):
             if(i==0):
                 x=fade*l(x)+(1-fade)*l(x)
