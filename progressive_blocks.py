@@ -88,7 +88,7 @@ class Generator(nn.Module):
         
         self.skip_block = nn.ModuleList([])
         for i in range(1, self.step-1):
-            self.skip_block.append(nn.Conv1d(in_channels=32,out_channels=32,kernel_size=1,))
+            self.skip_block.append(nn.Conv1d(in_channels=32,out_channels=32,kernel_size=1))
 
 
         self.embedding=nn.Embedding(batch_size,embedding_dim)
@@ -144,10 +144,11 @@ class Generator(nn.Module):
         
         if (fade and active > 0):
            layers= self.skip_block[temp_i]
-           #z=fade*self.outlayer(z).squeeze(1)+(1-fade)*(self.outlayer(layers(temp_z)).squeeze(1))
-           z=self.outlayer(z).squeeze(1)
+           z=fade*self.outlayer(z).squeeze(1)+(1-fade)*(self.outlayer(layers(temp_z)).squeeze(1))
+           #z=self.outlayer(z).squeeze(1)
         else:
            z=self.outlayer(z).squeeze(1)
+
 
         scale=False
         if (scale==True):
@@ -155,6 +156,8 @@ class Generator(nn.Module):
 
 
         z=z.unsqueeze(dim=1)
+
+        
         
         return z
 
@@ -178,11 +181,11 @@ class Discriminator(nn.Module):
         self.first_module = nn.Sequential(*first_module)
 
         self.blocks = nn.ModuleList([])
-        n=self.step
-        while(n-1): #1 is the first main block
+        n=self.step-1
+        while(n>0): 
             self.blocks.append(MainBlock(32,32,value_features,key_features))
             n-=1
-
+        
         last_module=[]
         last_module.append(MainBlock(32,32,value_features,key_features))
         last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1)))
@@ -195,9 +198,10 @@ class Discriminator(nn.Module):
 
 
 
-    def forward(self,Z,X,fade, active):    #Z is the output of the generator (batch,1,fake_len), X the time-features matrix
+    def forward(self,Z,X,fade,active):    #Z is the output of the generator (batch,1,fake_len), X the time-features matrix
 
-        #compute how many blocks we should use to arrive at the original length from 8(latent space)
+        #compute how much we have to reduce the X in order to concatenate it with Z
+        #PROBLEM WITH REAL SEQUENCES LENGTH (512)
         reduce_factor = int(math.log2(self.fake_len)) - int(math.log2(Z.size(2)))
         X=X.permute(0,2,1)
 
@@ -209,17 +213,23 @@ class Discriminator(nn.Module):
         X = torch.cat((phi, X), dim=1)
 
         reduced_X = F.avg_pool1d(X, kernel_size=2 ** reduce_factor) #in order to concatenate with Z
+       
+
         x = torch.cat((reduced_X, Z), dim=1)
 
         #D->32 channels
         x = self.first_module(x)
         
-
-        for l in self.blocks[active:]:
-            x = l(x)
-            x = F.avg_pool1d(x, kernel_size=2)
-            
-            
+        print(x.shape)
+        for i,l in enumerate(self.blocks[active:]):
+            if(i==0):
+                x=fade*l(x)+(1-fade)*l(x)
+                x = F.avg_pool1d(x, kernel_size=2)
+            else:    
+                x = l(x)
+                x = F.avg_pool1d(x, kernel_size=2)
+        
+        
 
         x = self.last_module(x)
         
