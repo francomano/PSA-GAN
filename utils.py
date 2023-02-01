@@ -49,7 +49,8 @@ def create_folder(path):
 
 def plot_training_history(name, discriminator_loss, generator_loss):
   fig, ax1 = plt.subplots(figsize=(20, 6))
-
+  
+  ax1.set_xticks(range(1, len(generator_loss) + 1))
   ax1.plot(discriminator_loss, 'o-', label='discriminator loss')
   ax1.plot(generator_loss, '^-', label='generator loss')
 
@@ -80,3 +81,11 @@ def assign_device(gpu):
     return device
 
 
+def moment_loss(fake_data, real_data):
+    fake_mean = fake_data.mean()
+    real_mean = real_data.mean()
+    fake_std = fake_data.std()
+    real_std = real_data.std()
+    return abs(fake_mean - real_mean) + abs(fake_std - real_std)
+
+    
