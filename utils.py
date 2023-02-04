@@ -42,7 +42,7 @@ def create_folder(path):
     isExist = os.path.exists(path)
     if not isExist:
         os.makedirs(path)
-    print("The new models directory is created!")
+    print("New models directory created!")
     return
 
 
@@ -50,7 +50,7 @@ def create_folder(path):
 def plot_training_history(name, discriminator_loss, generator_loss):
   fig, ax1 = plt.subplots(figsize=(20, 6))
   
-  ax1.set_xticks(range(1, len(generator_loss) + 1))
+  
   ax1.plot(discriminator_loss, 'o-', label='discriminator loss')
   ax1.plot(generator_loss, '^-', label='generator loss')
 
@@ -60,6 +60,7 @@ def plot_training_history(name, discriminator_loss, generator_loss):
   ax1.set_xlabel('Epoch')
 
   fig.suptitle(f'Training history {name}')
+  ax1.set_xticks(range(1, len(generator_loss) + 1))
   print("End-training Generator Loss:",generator_loss[-1])
   print("End-training Discriminator Loss:",discriminator_loss[-1])
   return
@@ -88,4 +89,14 @@ def moment_loss(fake_data, real_data):
     real_std = real_data.std()
     return abs(fake_mean - real_mean) + abs(fake_std - real_std)
 
-    
+
+def mse(fake_data, real_data):
+    return np.mean(np.square(real_data-fake_data))
+
+
+def abs_error(fake_data, real_data):
+    return np.sum(np.abs(real_data-fake_data))
+
+
+def nrmse(fake_data, real_data):
+    return np.sqrt(np.mean((real_data-fake_data)**2)) / (np.max(real_data)-np.min((real_data)))
