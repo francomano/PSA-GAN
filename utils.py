@@ -100,3 +100,47 @@ def abs_error(fake_data, real_data):
 
 def nrmse(fake_data, real_data):
     return np.sqrt(np.mean((real_data-fake_data)**2)) / (np.max(real_data)-np.min((real_data)))
+
+
+from tqdm import tqdm
+def evaluation(eval, test_loader, G):
+    
+    results=[]
+    with torch.no_grad():
+        device='cuda'
+        G.to(device)
+        for i, (X, Y) in tqdm(enumerate((test_loader)), total=len(test_loader)):
+            #print(i)
+            if(i==135):
+                break
+                print("Critic point")
+            X=X.to(device)
+            Y=Y.to(device)
+            
+            fake_data = G(X,1,(G.step-1))
+            real_data=Y[:,:,:fake_data.size(2)].to("cpu")
+
+            fake_data=fake_data.permute(0,2,1)
+            fake_data = fake_data.to("cpu").detach().numpy()
+            real_data = real_data.to("cpu").detach().numpy()
+
+            #fake_data=utils.scale(fake_data)
+            #real_data=utils.scale(real_data)
+
+            if(eval=="NRMSE"):
+                result=nrmse(fake_data, real_data)
+                results.append(result)
+            elif(eval=="MSE"):
+                result=mse(fake_data, real_data)
+                results.append(result)
+            elif(eval=="ABS"):
+                result=abs_error(fake_data, real_data)
+                results.append(result)
+            else:
+                print("error")
+                break
+
+    res_mean=np.mean(results)
+    res_stdev=np.std(results)
+
+    return res_mean, res_stdev
