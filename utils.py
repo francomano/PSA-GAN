@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import os
+import scipy
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from sklearn.preprocessing import MinMaxScaler
@@ -136,6 +137,7 @@ def evaluation(eval, test_loader, G):
             elif(eval=="ABS"):
                 result=abs_error(fake_data, real_data)
                 results.append(result)
+            #elif(eval=="FID"):
             else:
                 print("error")
                 break
@@ -143,4 +145,51 @@ def evaluation(eval, test_loader, G):
     res_mean=np.mean(results)
     res_stdev=np.std(results)
 
-    return res_mean, res_stdev
+    return res_mean, res_stdev, results
+
+
+
+def run_evaluation(eval, num_runs, test_loader, G):
+    means = []
+    stds = []
+    results = []
+    for i in range(num_runs):
+        mean, std, result = evaluation(eval, test_loader, G)
+        means.append(mean)
+        stds.append(std)
+        results.append(result)
+
+    res_mean = np.mean(results)
+    res_stdev = np.std(results)
+
+    conf_interval = 1.96 * (res_stdev / np.sqrt(num_runs))
+
+    return res_mean, res_stdev, conf_interval
+
+
+
+def calculate_fid(real_embeddings, generated_embeddings):
+    # calculate mean and covariance statistics
+    mu1, sigma1 = real_embeddings.mean(axis=0), np.cov(real_embeddings, rowvar=False)
+    mu2, sigma2 = generated_embeddings.mean(axis=0), np.cov(generated_embeddings,  rowvar=False)
+    # calculate sum squared difference between means
+    ssdiff = np.sum((mu1 - mu2)**2.0)
+    # calculate sqrt of product between cov
+    covmean = scipy.linalg.sqrtm(sigma1.dot(sigma2))
+    # check and correct imaginary numbers from sqrt
+    if np.iscomplexobj(covmean):
+        covmean = covmean.real
+    # calculate score
+    fid = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
+    return fid
+#fid = calculate_fid(real_image_embeddings, generated_image_embeddings)
+
+    
+
+
+
+
+
+
+
+
