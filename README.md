@@ -7,7 +7,7 @@ The PSA-GAN, is a progressively growing, convolutional time series GAN with self
 
 ## Getting Started
 
-These instructions will get you a copy of the project on your local machine for development and testing purposes.
+These instructions will get you a copy of the project on your local machine.
 ### REQUIREMENTS
 
 What things you need to install the software and how to install them. For example: 
@@ -15,14 +15,16 @@ What things you need to install the software and how to install them. For exampl
 * [Git](https://git-scm.com/downloads)
 * [PyTorch](https://pytorch.org/)
 * [Numpy](https://numpy.org/)
-* [Matplotlib](https://matplotlib.org/) 
+* [Matplotlib](https://matplotlib.org/)
+* [Scipy](https://scipy.org/)
+* [Scikit-learn](https://scikit-learn.org/stable/)
 
 
 ### Installation
 Step by step series of examples that tell you how to get a development env running: 
 
  1. Clone the repository: `git clone https://github.com/francomano/PSA-GAN.git` 
- 
+ 2. Launch the notebook
 
  ## Built With 
 
@@ -38,5 +40,6 @@ Step by step series of examples that tell you how to get a development env runni
 ## Cite
 
 * **Michael Bohlke-Schneider** - [mbohlkeschneider](https://github.com/mbohlkeschneider/psa-gan)
+* **Jean-Yves Franceschi** - [mbohlkeschneider](https://github.com/White-Link/UnsupervisedScalableRepresentationLearningTimeSeries)
 
 

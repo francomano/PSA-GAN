@@ -50,19 +50,21 @@ class Self_Attn(nn.Module):
 
 
 class MainBlock(nn.Module):
-    def __init__(self,inc,outc,value_features,key_features):
+    def __init__(self,inc,outc,value_features,key_features, sa):
         super().__init__()
         layer=[]
         layer.append(nn.utils.spectral_norm(nn.Conv1d(in_channels = inc, out_channels=outc,kernel_size=1)))
         layer.append(nn.LeakyReLU())
 
+        self.sa=sa
         self.l = nn.Sequential(*layer)
         self.attn = Self_Attn(outc,value_features,key_features)
         
     
     def forward(self, z):
         out=self.l(z)
-        out=self.attn(out)
+        if(self.sa):
+            out=self.attn(out)
         return out
 
 
@@ -70,10 +72,10 @@ class MainBlock(nn.Module):
 class Generator(nn.Module):            
     
         
-    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,device):
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,sa,device):
         super().__init__()
 
-        self.main=MainBlock(1+num_features,32,value_features,key_features)
+        self.main=MainBlock(1+num_features,32,value_features,key_features,sa)
 
         self.fake_len=fake_len  #the len we want to reach
         self.step=(int)(math.log2(self.fake_len))-2
@@ -84,7 +86,7 @@ class Generator(nn.Module):
         
         self.blocks = nn.ModuleList([])
         for i in range(self.step-1):
-            self.blocks.append(MainBlock(32+num_features,32,value_features,key_features))
+            self.blocks.append(MainBlock(32+num_features,32,value_features,key_features,sa))
         
         self.skip_block = nn.ModuleList([])
         for i in range(1, self.step-1):
@@ -165,7 +167,7 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
 
-    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,device):
+    def __init__(self,embedding_dim,fake_len,num_features,batch_size,value_features,key_features,sa,device):
         super().__init__()
 
         self.fake_len=fake_len
@@ -183,11 +185,11 @@ class Discriminator(nn.Module):
         self.blocks = nn.ModuleList([])
         n=self.step-1
         while(n>0): 
-            self.blocks.append(MainBlock(32,32,value_features,key_features))
+            self.blocks.append(MainBlock(32,32,value_features,key_features,sa))
             n-=1
         
         last_module=[]
-        last_module.append(MainBlock(32,32,value_features,key_features))
+        last_module.append(MainBlock(32,32,value_features,key_features,sa))
         last_module.append(nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1)))
         last_module.append(nn.LeakyReLU())
 
