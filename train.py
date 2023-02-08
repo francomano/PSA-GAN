@@ -128,7 +128,7 @@ def train_GAN(
                 with torch.no_grad():
                     fake_embedding=embedder(fake_data)
                     real_embedding=embedder(Y) 
-                    fid = metrics.calculate_fid(real_embedding.to("cpu").detach().numpy(), fake_embedding.to("cpu").detach().numpy())
+                    fid = metrics.calculate_fid(fake_embedding.to("cpu").detach().numpy(),real_embedding.to("cpu").detach().numpy())
                     
                 fids_temp.append(fid)    
 
