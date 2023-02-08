@@ -136,14 +136,14 @@ def train_GAN(
                 if (i+1) % 1 == 0:
                     print("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f] [Fade-in: %f] [FID: %f]" % 
                         (epoch, num_epochs, i+1, len(train_loader), d_loss.item(), g_loss.item(), fade, fid))
-                
+                '''
                 if(g_loss<g_loss_min and d_loss<d_loss_min and save):
                         g_loss_min = g_loss
                         d_loss_min = d_loss
                         torch.save(G, path+name+'/'+name+'_generator.pt')
                         torch.save(D, path+name+'/'+name+'_discriminator.pt')
                         print('Improvement-Detected, model saved')
-
+                '''
 
             g_losses.append(torch.mean(torch.Tensor(g_losses_temp)))
             d_losses.append(torch.mean(torch.Tensor(d_losses_temp)))
@@ -159,6 +159,8 @@ def train_GAN(
             'Blocks to add: '+str(blocks_to_add),
             'Timestamp: '+str(timestamp),
             ]
+    torch.save(G, path+name+'/'+name+'_generator.pt')
+    torch.save(D, path+name+'/'+name+'_discriminator.pt')
     plotting.plot_training_history('PSA-GAN - M4 - '+name,d_losses, g_losses)
     plotting.plot_fid_history('PSA-GAN - M4 - '+name, fids)
     location=path+'/'+name+'/'+name

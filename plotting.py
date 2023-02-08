@@ -60,7 +60,7 @@ def plot_prediction(fake_data, real_data, title, name_model):
 def prediction_test(seq_length, batch_size, test_set, testX, G, name_model):
     seq_length = 512 #it is tau in the paper
 
-    batch_size=347
+    batch_size=121
 
     t = test_set[len(testX):len(testX)+seq_length]
 
