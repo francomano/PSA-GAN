@@ -95,14 +95,7 @@ class Generator(nn.Module):
 
         self.embedding=nn.Embedding(batch_size,embedding_dim)
         self.pool=pool(self.fake_len,self.step)
-        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1))
-        
-
-    def softmax_min_max_localscaling(self, target, alpha=100):
-        min = torch.sum(target * self.softmax(-alpha * target), dim=1, keepdim=True)
-        max = torch.sum(target * self.softmax(alpha * target), dim=1, keepdim=True)
-
-        return (target - min) / (max - min)    
+        self.outlayer=nn.utils.spectral_norm(nn.Conv1d(in_channels =32, out_channels=1,kernel_size=1)) 
     
     
 
@@ -150,11 +143,6 @@ class Generator(nn.Module):
            #z=self.outlayer(z).squeeze(1)
         else:
            z=self.outlayer(z).squeeze(1)
-
-
-        scale=False
-        if (scale==True):
-            z=self.softmax_min_max_localscaling(z)
 
 
         z=z.unsqueeze(dim=1)
