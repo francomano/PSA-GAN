@@ -155,7 +155,7 @@ def train_GAN(
             'epochs: '+str(num_epochs),
             'ML: '+str(ml),
             'SA: '+str(sa),
-            'Fade-in: '+str(fade),
+            'Fade-in: '+str(fade_in),
             'Blocks to add: '+str(blocks_to_add),
             'Timestamp: '+str(timestamp),
             ]
